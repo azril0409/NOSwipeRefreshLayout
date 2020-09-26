@@ -77,7 +77,17 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                         }.onPreferenceChange(SizePreferenceKey.self){ size in
                             self.insideHeight = size.height
                             self.insideWidth = size.width
-                        }
+                        }.onReceive(Just(self.isShowProgressBar), perform: { value in
+                            if value != self.beforeProgressBarStatus {
+                                if value == false {
+                                    withAnimation(.spring()){
+                                        self.afterValue = 0
+                                        self.beforeValue = 0
+                                    }
+                                }
+                            }
+                            self.beforeProgressBarStatus = value
+                        })
                         self.content()
                     }.frame( minWidth:outsideProxy.size.width,
                              maxWidth: .infinity,
@@ -96,17 +106,6 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
         }
         .clipped()
         .edgesIgnoringSafeArea(.all)
-        .onReceive(Just(self.isShowProgressBar), perform: { value in
-            if value != self.beforeProgressBarStatus {
-                if value == false {
-                    withAnimation(.spring()){
-                        self.afterValue = 0
-                        self.beforeValue = 0
-                    }
-                }
-            }
-            self.beforeProgressBarStatus = value
-        })
     }
     
     private func onScrollOffsetChange(outsideProxy:GeometryProxy, value:CGFloat){
