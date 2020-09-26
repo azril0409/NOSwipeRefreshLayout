@@ -17,7 +17,7 @@ Pod::Spec.new do |spec|
 
   spec.name         = "NOSwipeRefreshLayout"
   spec.version      = "1.0.0"
-  spec.summary      = "A short description of NOSwipeRefreshLayout."
+  spec.summary      = "It is an IOS app swipe refresh view for swiftui"
 
   # This description is used to generate tags and improve search results.
   #   * Think: What does it do? Why did you write it? What is the focus?
@@ -25,7 +25,7 @@ Pod::Spec.new do |spec|
   #   * Write the description between the DESC delimiters below.
   #   * Finally, don't worry about the indent, CocoaPods strips it!
   spec.description  = <<-DESC
-  NOSwipeRefreshLayout is an ios swipe refresh layout framework for SwiftUI.
+  NOSwipeRefreshLayout is an ios router framework for SwiftUI.
                    DESC
 
   spec.homepage     = "https://github.com/azril0409/NOSwipeRefreshLayout"
@@ -52,7 +52,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
     LICENSE
-  
+  }
   # spec.license      = { :type => "MIT", :file => "FILE_LICENSE" }
 
 
@@ -76,13 +76,14 @@ limitations under the License.
   #  If this Pod runs only on iOS or OS X, then specify the platform and
   #  the deployment target. You can optionally include the target after the platform.
   #
-
   spec.swift_version = '5.0'
-  # spec.platform     = :ios
-  spec.platform     = :ios, "13.0"
   
+  spec.platform     = :ios
+  # spec.platform     = :ios, "5.0"
+
   #  When using multiple platforms
   spec.ios.deployment_target = "13.0"
+  # spec.ios.deployment_target = "5.0"
   # spec.osx.deployment_target = "10.7"
   # spec.watchos.deployment_target = "2.0"
   # spec.tvos.deployment_target = "9.0"
@@ -105,8 +106,8 @@ limitations under the License.
   #  Not including the public_header_files will make all headers public.
   #
 
-  spec.source_files  = "NOSwipeRefreshLayout", "NOSwipeRefreshLayout/*.{h,m}"
-  spec.exclude_files = "NOSwipeRefreshLayout//*.h"
+  spec.source_files  = "NOSwipeRefreshLayout", "NOSwipeRefreshLayout/*.{h,m,swift}"
+  spec.exclude_files = "NOSwipeRefreshLayout/*.h"
 
   # spec.public_header_files = "Classes/**/*.h"
 
