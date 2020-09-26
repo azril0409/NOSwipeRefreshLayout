@@ -16,13 +16,13 @@ struct ContentView: View {
     @State private var text = ""
     
     var body: some View {
-        NOSwipeRefreshLayout(axes:.horizontal,
+        NOSwipeRefreshLayout(axes:.vertical,
                              progressBarView: AnyView(LinearGradient(gradient: Gradient(colors: [Color.red, Color.blue]), startPoint: .topLeading, endPoint: .bottomTrailing)),
-                             progressBarAxes:.horizontal,
+                             progressBarAxes:.vertical,
                              thresholdValue: 120,
                              isShowProgressBar: self.$isShowProgressBar,
-                             enableRefresh:false,
-                             enableAppend:false,
+                             enableRefresh:true,
+                             enableAppend:true,
                              onScroll:{ rect in
                                 self.text = "x:\(rect.origin.x), y:\(rect.origin.y), width:\(rect.size.width), height:\(rect.size.height)"
                              },

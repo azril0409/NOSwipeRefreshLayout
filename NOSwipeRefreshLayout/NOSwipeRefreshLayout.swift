@@ -5,6 +5,7 @@
 //  Created by Deo on 2020/9/24.
 //
 
+import Combine
 import SwiftUI
 
 public struct NOSwipeRefreshLayout<Content:View>: View {
@@ -14,7 +15,7 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     private let progressBarAxes: Axis.Set
     private let content:()->Content
     private let thresholdValue:CGFloat
-    @Binding var isShowProgressBar:Bool
+    @Binding private var isShowProgressBar:Bool
     private let enableRefresh:Bool
     private let enableAppend:Bool
     private let onScroll:(CGRect)->Void
@@ -28,6 +29,9 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     @State private var appendSecondThreshold = false
     @State private var insideHeight:CGFloat = 0
     @State private var insideWidth:CGFloat = 0
+    @State private var beforeProgressBarStatus = false
+    
+    @State var log = ""
     
     public init(axes: Axis.Set = .vertical,
                 showsIndicators:Bool = true,
@@ -85,17 +89,23 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                     self.progressBarView.frame(width: self.getProgressBarWidth(outsideProxy), height: self.getProgressBarHeight(outsideProxy)).clipped()
                     Spacer()
                 }
+                VStack{
+                    Text(self.log)
+                }
             }
         }
         .clipped()
         .edgesIgnoringSafeArea(.all)
-        .onChange(of: self.isShowProgressBar, perform: { value in
-            if value == false {
-                withAnimation(.spring()){
-                    self.afterValue = 0
-                    self.beforeValue = 0
+        .onReceive(Just(self.isShowProgressBar), perform: { value in
+            if value != self.beforeProgressBarStatus {
+                if value == false {
+                    withAnimation(.spring()){
+                        self.afterValue = 0
+                        self.beforeValue = 0
+                    }
                 }
             }
+            self.beforeProgressBarStatus = value
         })
     }
     
