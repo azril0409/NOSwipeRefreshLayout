@@ -31,8 +31,6 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     @State private var insideWidth:CGFloat = 0
     @State private var beforeProgressBarStatus = false
     
-    @State var log = ""
-    
     public init(axes: Axis.Set = .vertical,
                 showsIndicators:Bool = true,
                 progressBarView: AnyView = AnyView(ZStack{ProgressBarView().frame(maxWidth: 48, maxHeight: 48)}),
@@ -94,14 +92,13 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                              minHeight: outsideProxy.size.height,
                              maxHeight: .infinity)
                 }
-                
                 VStack(){
                     self.progressBarView.frame(width: self.getProgressBarWidth(outsideProxy), height: self.getProgressBarHeight(outsideProxy)).clipped()
                     Spacer()
-                }
-                VStack{
-                    Text(self.log)
-                }
+                }.frame( minWidth:outsideProxy.size.width,
+                         maxWidth: .infinity,
+                         minHeight: outsideProxy.size.height,
+                         maxHeight: .infinity)
             }
         }
         .clipped()
