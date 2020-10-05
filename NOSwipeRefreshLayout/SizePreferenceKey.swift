@@ -8,11 +8,12 @@
 import SwiftUI
 
 struct SizePreferenceKey: PreferenceKey {
-    typealias Value = CGSize
+    typealias Value = [CGFloat]
     
-    static var defaultValue: CGSize = CGSize(width: 0, height: 0)
+    static var defaultValue: [CGFloat] = [0,0]
     
-    static func reduce(value: inout CGSize, nextValue: () -> CGSize) {
-        value = nextValue()
+    static func reduce(value: inout [CGFloat], nextValue: () -> [CGFloat]) {
+        value[0] = nextValue()[0]
+        value[1] = nextValue()[1]
     }
 }

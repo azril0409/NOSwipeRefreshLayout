@@ -27,8 +27,8 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     @State private var refreshSecondThreshold = false
     @State private var appendFirstThreshold = false
     @State private var appendSecondThreshold = false
-    @State private var insideHeight:CGFloat = 0
-    @State private var insideWidth:CGFloat = 0
+    @State private var insideHeight:CGFloat = UIScreen.main.bounds.height
+    @State private var insideWidth:CGFloat = UIScreen.main.bounds.width
     @State private var beforeProgressBarStatus = false
     
     public init(axes: Axis.Set = .vertical,
@@ -59,22 +59,22 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     
     
     public var body: some View {
-        ZStack{
+        ZStack(alignment: .center){
             GeometryReader { outsideProxy in
                 ScrollView(self.axes, showsIndicators: self.showsIndicators){
-                    ZStack{
+                    ZStack(alignment: .center){
                         GeometryReader { insideProxy in
                             Color.clear.onAppear{
                                 self.isShowProgressBar = false
                             }
                             .preference(key: ScrollOffsetPreferenceKey.self, value: self.calculateContentOffset(outsideProxy, insideProxy))
-                            .preference(key: SizePreferenceKey.self, value: insideProxy.size)
+                            .preference(key: SizePreferenceKey.self, value: self.getInsideSize(outsideProxy,insideProxy))
                         }.onPreferenceChange(ScrollOffsetPreferenceKey.self){ value in
                             self.onScrollOffsetChange(outsideProxy: outsideProxy, value: value)
                             self.oncalculateScrollCallback(outsideProxy: outsideProxy, value: value)
                         }.onPreferenceChange(SizePreferenceKey.self){ size in
-                            self.insideHeight = size.height
-                            self.insideWidth = size.width
+                            self.insideWidth = size[0]
+                            self.insideHeight = size[1]
                         }.onReceive(Just(self.isShowProgressBar), perform: { value in
                             if value != self.beforeProgressBarStatus {
                                 if value == false {
@@ -86,19 +86,28 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                             }
                             self.beforeProgressBarStatus = value
                         })
-                        self.content()
-                    }.frame( minWidth:outsideProxy.size.width,
-                             maxWidth: .infinity,
-                             minHeight: outsideProxy.size.height,
-                             maxHeight: .infinity)
+                        .frame(minWidth: outsideProxy.size.width,
+                               maxWidth: .infinity,
+                               minHeight: outsideProxy.size.height,
+                               maxHeight: .infinity)
+                        self.content().frame( minWidth: outsideProxy.size.width,
+                                              maxWidth: .infinity,
+                                              minHeight: outsideProxy.size.height,
+                                              maxHeight: .infinity)
+                    }
                 }
                 VStack(){
                     self.progressBarView.frame(width: self.getProgressBarWidth(outsideProxy), height: self.getProgressBarHeight(outsideProxy)).clipped()
                     Spacer()
-                }.frame( minWidth:outsideProxy.size.width,
-                         maxWidth: .infinity,
-                         minHeight: outsideProxy.size.height,
-                         maxHeight: .infinity)
+                }
+                .frame(minWidth: outsideProxy.size.width,
+                       maxWidth: .infinity,
+                       minHeight: outsideProxy.size.height,
+                       maxHeight: .infinity)
+                .onAppear {
+                    self.insideWidth = outsideProxy.size.width
+                    self.insideHeight = outsideProxy.size.height
+                }
             }
         }
         .clipped()
@@ -176,6 +185,12 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
             let insideGlobal = insideProxy.frame(in: .global).minX
             return outsideGlobal - insideGlobal
         }
+    }
+    
+    private func getInsideSize(_ outsideProxy: GeometryProxy, _ insideProxy: GeometryProxy) -> [CGFloat]{
+        let w = insideProxy.size.width < outsideProxy.size.width ? outsideProxy.size.width : insideProxy.size.width
+        let h = insideProxy.size.height < outsideProxy.size.height ? outsideProxy.size.height : insideProxy.size.height
+        return [w,h]
     }
     
     private func getProgressBarWidth(_ outsideProxy:GeometryProxy) -> CGFloat{
