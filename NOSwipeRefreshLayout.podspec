@@ -16,7 +16,7 @@ Pod::Spec.new do |spec|
   #
 
   spec.name         = "NOSwipeRefreshLayout"
-  spec.version      = "1.0.3"
+  spec.version      = "1.0.4"
   spec.summary      = "It is an IOS app swipe refresh view for swiftui"
 
   # This description is used to generate tags and improve search results.
