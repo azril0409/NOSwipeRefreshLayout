@@ -16,47 +16,44 @@ struct ContentView: View {
     @State private var text = ""
     
     var body: some View {
-        GeometryReader { geometry in
-            ZStack{
+        ZStack{
+            VStack{
+                NOSwipeRefreshLayout(axes:.vertical,
+                                     progressBarAxes:.vertical,
+                                     isShowProgressBar: self.$isShowProgressBar,
+                                     onScroll:{ rect in
+                                        self.text = "x:\(rect.origin.x), y:\(rect.origin.y), width:\(rect.size.width), height:\(rect.size.height)"
+                                     },
+                                     onRefresh: {
+                                        self.isOnRefresh = true },
+                                     onAppend:{
+                                        self.isOnAppend = true }
+                ){
                     VStack{
-                        Text("Test Header").frame(height: 100)
-                        NOSwipeRefreshLayout(axes:.vertical,
-                                             progressBarAxes:.vertical,
-                                             isShowProgressBar: self.$isShowProgressBar,
-                                             onScroll:{ rect in
-                                                self.text = "x:\(rect.origin.x), y:\(rect.origin.y), width:\(rect.size.width), height:\(rect.size.height)"
-                                             },
-                                             onRefresh: {
-                                                self.isOnRefresh = true },
-                                             onAppend:{
-                                                self.isOnAppend = true }
-                        ){
-                            VStack{
-                                Text(self.text)
-                                ForEach(self.items) { item in
-                                    Text(item.id.uuidString)
-                                        .frame(maxWidth: .infinity)
-                                        .padding()
-                                        .background(Color.blue.cornerRadius(8).shadow(color: .gray, radius: 2, x: 2, y: 2)).padding()
-                                }
-                                Spacer()
-                                Text(self.text)
-                            }
+                        Text(self.text)
+                        ForEach(self.items) { item in
+                            Text(item.id.uuidString)
+                                .frame(maxWidth: .infinity)
+                                .padding()
+                                .background(Color.blue.cornerRadius(8).shadow(color: .gray, radius: 2, x: 2, y: 2)).padding()
                         }
-                        .onReceive(Timer.publish(every: 3, on: .main, in: .default).autoconnect(), perform: { _ in
-                            self.isShowProgressBar = false
-                            if self.isOnRefresh {
-                                self.isOnRefresh = false
-                                self.items.removeAll()
-                            }
-                            if self.isOnAppend {
-                                self.isOnAppend = false
-                                self.items.append(Item())
-                            }
-                        })
+                        Spacer()
+                        Text(self.text)
+                    }.padding(.top,40)
+                }
+                .onReceive(Timer.publish(every: 3, on: .main, in: .default).autoconnect(), perform: { _ in
+                    self.isShowProgressBar = false
+                    if self.isOnRefresh {
+                        self.isOnRefresh = false
+                        self.items.removeAll()
                     }
-            }.frame(height: 500)
-        }
+                    if self.isOnAppend {
+                        self.isOnAppend = false
+                        self.items.append(Item())
+                    }
+                })
+            }
+        }.edgesIgnoringSafeArea(.all)
     }
 }
 
