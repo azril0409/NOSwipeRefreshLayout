@@ -12,7 +12,7 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     private let axes: Axis.Set
     private let showsIndicators:Bool
     private let progressBarView:AnyView
-    private let progressBarAxes: Axis.Set
+    private let progressBarAxes: ProgressBarAlignment
     private let content:()->Content
     private let thresholdValue:CGFloat
     @Binding private var isShowProgressBar:Bool
@@ -27,6 +27,10 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     @State private var refreshSecondThreshold = false
     @State private var appendFirstThreshold = false
     @State private var appendSecondThreshold = false
+    @State private var outsideHeight:CGFloat = CGFloat(0)
+    @State private var outsideWidth:CGFloat = CGFloat(0)
+    @State private var outsideGlobalX:CGFloat = CGFloat(0)
+    @State private var outsideGlobalY:CGFloat = UIScreen.main.bounds.height
     @State private var insideHeight:CGFloat = UIScreen.main.bounds.height
     @State private var insideWidth:CGFloat = UIScreen.main.bounds.width
     @State private var beforeProgressBarStatus = false
@@ -34,7 +38,7 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     public init(axes: Axis.Set = .vertical,
                 showsIndicators:Bool = true,
                 progressBarView: AnyView = AnyView(ZStack{ProgressBarView().frame(maxWidth: 48, maxHeight: 48)}),
-                progressBarAxes: Axis.Set = .vertical,
+                progressBarAxes: ProgressBarAlignment = .vertical,
                 thresholdValue:CGFloat = 96,
                 isShowProgressBar: Binding<Bool>,
                 enableRefresh:Bool = true,
@@ -57,78 +61,117 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
         self.content = content
     }
     
-    
     public var body: some View {
-        ZStack(alignment: .center){
-            GeometryReader { outsideProxy in
-                ScrollView(self.axes, showsIndicators: self.showsIndicators){
-                    ZStack(alignment: .center){
-                        GeometryReader { insideProxy in
-                            Color.clear.onAppear{
-                                self.isShowProgressBar = false
-                            }
-                            .preference(key: ScrollOffsetPreferenceKey.self, value: self.calculateContentOffset(outsideProxy, insideProxy))
-                            .preference(key: SizePreferenceKey.self, value: self.getInsideSize(outsideProxy,insideProxy))
-                        }.onPreferenceChange(ScrollOffsetPreferenceKey.self){ value in
-                            self.onScrollOffsetChange(outsideProxy: outsideProxy, value: value)
-                            self.oncalculateScrollCallback(outsideProxy: outsideProxy, value: value)
-                        }.onPreferenceChange(SizePreferenceKey.self){ size in
-                            self.insideWidth = size[0]
-                            self.insideHeight = size[1]
-                        }.onReceive(Just(self.isShowProgressBar), perform: { value in
-                            if value != self.beforeProgressBarStatus {
-                                if value == false {
-                                    withAnimation(.spring()){
-                                        self.afterValue = 0
-                                        self.beforeValue = 0
-                                    }
-                                }
-                            }
-                            self.beforeProgressBarStatus = value
-                        })
-                        .frame(minWidth: outsideProxy.size.width,
-                               maxWidth: .infinity,
-                               minHeight: outsideProxy.size.height,
-                               maxHeight: .infinity)
-                        self.content().frame( minWidth: outsideProxy.size.width,
-                                              maxWidth: .infinity,
-                                              minHeight: outsideProxy.size.height,
-                                              maxHeight: .infinity)
+        ScrollView(self.axes, showsIndicators: self.showsIndicators){
+                self.content().background(self.contentBackground)
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .overlay(self.progressBarLayout)
+        .background(layoutBackground)
+        .onReceive(Just(self.isShowProgressBar), perform: { value in
+            if value != self.beforeProgressBarStatus {
+                if value == false {
+                    withAnimation(.spring()){
+                        self.afterValue = 0
+                        self.beforeValue = 0
                     }
                 }
-                VStack(){
-                    self.progressBarView.frame(width: self.getProgressBarWidth(outsideProxy), height: self.getProgressBarHeight(outsideProxy)).clipped()
+            }
+            self.beforeProgressBarStatus = value
+        })
+    }
+    
+    private var progressBarLayout: some View {
+        ZStack{
+            if self.progressBarAxes == .vertical, self.progressBarAxes == .top {
+                VStack{
+                    self.progressBarView.frame(width:self.getProgressBarWidth(CGSize(width: self.outsideWidth,
+                                                                                     height: self.outsideHeight)),
+                                               height: self.getProgressBarHeight(CGSize(width: self.outsideWidth,
+                                                                                        height: self.outsideHeight))).clipped()
                     Spacer()
                 }
-                .frame(minWidth: outsideProxy.size.width,
-                       maxWidth: .infinity,
-                       minHeight: outsideProxy.size.height,
-                       maxHeight: .infinity)
-                .onAppear {
-                    self.insideWidth = outsideProxy.size.width
-                    self.insideHeight = outsideProxy.size.height
+            }else if self.progressBarAxes == .bottom {
+                VStack{
+                    Spacer()
+                    self.progressBarView.frame(width:self.getProgressBarWidth(CGSize(width: self.outsideWidth,
+                                                                                     height: self.outsideHeight)),
+                                               height: self.getProgressBarHeight(CGSize(width: self.outsideWidth,
+                                                                                        height: self.outsideHeight))).clipped()
+                }
+            }else if self.progressBarAxes == .trailing{
+                HStack{
+                    Spacer()
+                    self.progressBarView.frame(width:self.getProgressBarWidth(CGSize(width: self.outsideWidth,
+                                                                                     height: self.outsideHeight)),
+                                               height: self.getProgressBarHeight(CGSize(width: self.outsideWidth,
+                                                                                        height: self.outsideHeight))).clipped()
+                    
+                }
+            }else {
+                HStack{
+                    self.progressBarView.frame(width:self.getProgressBarWidth(CGSize(width: self.outsideWidth,
+                                                                                     height: self.outsideHeight)),
+                                               height: self.getProgressBarHeight(CGSize(width: self.outsideWidth,
+                                                                                        height: self.outsideHeight))).clipped()
+                    Spacer()
                 }
             }
         }
-        .clipped()
-        .edgesIgnoringSafeArea(.all)
     }
     
-    private func onScrollOffsetChange(outsideProxy:GeometryProxy, value:CGFloat){
-        if !self.isShowProgressBar {
-            self.afterValue = value
-            let v :CGFloat
-            if self.axes == .vertical {
-                v = (self.insideHeight - outsideProxy.size.height - self.afterValue)
-            } else {
-                v = (self.insideWidth - outsideProxy.size.width - self.afterValue)
+    private var layoutBackground: some View{
+        GeometryReader { outsideProxy in
+            Spacer().preference(key: SizePreferenceKey.self, value: [outsideProxy.frame(in: .local).width,
+                                                                     outsideProxy.frame(in: .local).height,
+                                                                     outsideProxy.frame(in: .global).minX,
+                                                                     outsideProxy.frame(in: .global).maxY,
+                                                                     outsideProxy.frame(in: .local).maxY,
+                                                                     outsideProxy.frame(in: .local).minY])
+        }
+        .onPreferenceChange(SizePreferenceKey.self, perform: { value in
+            self.outsideWidth = value[0] > 0 ? value[0] : UIScreen.main.bounds.width
+            self.outsideHeight = value[1] > 0 ? value[1] :  UIScreen.main.bounds.height
+            self.outsideGlobalX = value[2]
+            self.outsideGlobalY = value[3]
+            print("outsideHeight: \(outsideHeight)")
+        })
+    }
+    
+    private var contentBackground: some View{
+        GeometryReader { insideProxy in
+            Spacer().onAppear{
+                self.isShowProgressBar = false
             }
-            if self.enableRefresh && self.afterValue < 0{
-                if self.refreshFirstThreshold && self.refreshSecondThreshold && abs(self.afterValue) <= self.thresholdValue {
+            .preference(key: ScrollOffsetPreferenceKey.self, value: self.calculateContentOffset(insideProxy))
+            .preference(key: SizePreferenceKey.self, value: self.getInsideSize(insideProxy))
+        }
+        .onPreferenceChange(ScrollOffsetPreferenceKey.self){ value in
+            self.onScrollOffsetChange(value: value)
+            self.oncalculateScrollCallback(value: value)
+        }.onPreferenceChange(SizePreferenceKey.self){ size in
+            self.insideWidth = size[0]
+            self.insideHeight = size[1]
+        }
+    }
+    
+    private func onScrollOffsetChange(value:CGFloat){
+        self.afterValue = value
+        if !self.isShowProgressBar {
+            var v :CGFloat
+            if self.axes == .vertical {
+                v = (self.insideHeight - self.outsideHeight - value)
+            } else {
+                v = (self.insideWidth - self.outsideWidth - value)
+            }
+            if self.enableRefresh && value < 0{
+                if self.refreshFirstThreshold && self.refreshSecondThreshold && abs(value) <= self.thresholdValue {
                     self.refreshFirstThreshold = false
                     self.refreshSecondThreshold = false
-                    self.isShowProgressBar = true
-                    self.onRefresh()
+                    if !self.isShowProgressBar {
+                        self.isShowProgressBar = true
+                        self.onRefresh()
+                    }
                 }else if self.refreshFirstThreshold && self.afterValue > self.beforeValue{
                     self.refreshSecondThreshold = true
                 }else if abs(self.afterValue) > self.thresholdValue {
@@ -138,8 +181,10 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                 if self.appendFirstThreshold && self.appendSecondThreshold && abs(v) <= self.thresholdValue {
                     self.appendFirstThreshold = false
                     self.appendSecondThreshold = false
-                    self.isShowProgressBar = true
-                    self.onAppend()
+                    if !self.isShowProgressBar {
+                        self.isShowProgressBar = true
+                        self.onAppend()
+                    }
                 }else if self.appendFirstThreshold && self.beforeValue > self.afterValue {
                     self.appendSecondThreshold = true
                 }else if abs(v) > self.thresholdValue {
@@ -147,24 +192,24 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                 }
             }
         }
-        self.beforeValue = value
+        self.beforeValue = self.afterValue
     }
     
-    private func oncalculateScrollCallback(outsideProxy:GeometryProxy, value:CGFloat){
+    private func oncalculateScrollCallback(value:CGFloat){
         if self.axes == .horizontal {
             let y:CGFloat = 0
-            let height = outsideProxy.size.height
+            let height = outsideHeight
             let x = value
-            var width = x + outsideProxy.size.width
+            var width = x + outsideWidth
             if width > insideWidth {
                 width = insideWidth
             }
             onScroll(CGRect(x: x, y: y, width: width, height: height))
         }else{
             let x:CGFloat = 0
-            let width = outsideProxy.size.width
+            let width = outsideWidth
             let y = value
-            var height = y + outsideProxy.size.height
+            var height = y + outsideHeight
             if height > insideHeight {
                 height = insideHeight
             }
@@ -172,33 +217,41 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
         }
     }
     
-    
-    private func calculateContentOffset(_ outsideProxy: GeometryProxy,_ insideProxy: GeometryProxy) -> CGFloat {
+    private func calculateContentOffset(_ insideProxy: GeometryProxy) -> CGFloat {
         if axes == .vertical {
-            let outsideGlobal = outsideProxy.frame(in: .global).maxY
+            let outsideGlobal = outsideGlobalY
             let insideGlobal = insideProxy.frame(in: .global).maxY
-            let outsideHeight = outsideProxy.size.height
+            let outsideHeight = self.outsideHeight
             let insideHeight = insideProxy.size.height
             return outsideGlobal - insideGlobal + insideHeight - outsideHeight
         } else {
-            let outsideGlobal = outsideProxy.frame(in: .global).minX
+            let outsideGlobal = outsideGlobalX
             let insideGlobal = insideProxy.frame(in: .global).minX
             return outsideGlobal - insideGlobal
         }
     }
     
-    private func getInsideSize(_ outsideProxy: GeometryProxy, _ insideProxy: GeometryProxy) -> [CGFloat]{
-        let w = insideProxy.size.width < outsideProxy.size.width ? outsideProxy.size.width : insideProxy.size.width
-        let h = insideProxy.size.height < outsideProxy.size.height ? outsideProxy.size.height : insideProxy.size.height
+    private func getInsideSize(_ insideProxy: GeometryProxy) -> [CGFloat]{
+        getInsideSize(CGSize(width: outsideWidth, height: outsideHeight), insideProxy.size)
+    }
+    
+    private func getInsideSize(_ outsideSize: CGSize, _ insideSize: CGSize) -> [CGFloat]{
+        let w = insideSize.width < outsideSize.width ? outsideSize.width : insideSize.width
+        let h = insideSize.height < outsideSize.height ? outsideSize.height : insideSize.height
         return [w,h]
     }
     
-    private func getProgressBarWidth(_ outsideProxy:GeometryProxy) -> CGFloat{
-        if self.progressBarAxes == .horizontal {
+    private func getProgressBarWidth(_ outsideCGSize:CGSize) -> CGFloat{
+        if self.progressBarAxes == .horizontal ||
+            self.progressBarAxes == .leading ||
+            self.progressBarAxes == .trailing {
+            if self.isShowProgressBar  {
+                return self.thresholdValue
+            }
             let value:CGFloat
             if self.axes == .horizontal {
                 if self.afterValue > 0 {
-                    let v = getHorizontalDifferenceValue(outsideProxy)
+                    let v = getHorizontalDifferenceValue(outsideCGSize)
                     if v > 0 {
                         value = 0
                     }else{
@@ -209,7 +262,7 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                 }
             }else{
                 if self.afterValue > 0 {
-                    let v = self.getVerticalDifferenceValue(outsideProxy)
+                    let v = self.getVerticalDifferenceValue(outsideCGSize)
                     if v > 0 {
                         value = 0
                     }else{
@@ -219,23 +272,25 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                     value = self.enableRefresh ? abs(self.afterValue) : 0
                 }
             }
-            if self.isShowProgressBar || self.appendSecondThreshold || self.refreshSecondThreshold {
-                return value >= 0 ? value : 0
-            }
             return value
         }else{
-            return outsideProxy.size.width
+            return outsideCGSize.width
         }
     }
     
-    private func getProgressBarHeight(_ outsideProxy:GeometryProxy) -> CGFloat{
-        if self.progressBarAxes == .horizontal {
-            return outsideProxy.size.height
+    private func getProgressBarHeight(_ outsideCGSize:CGSize) -> CGFloat{
+        if self.progressBarAxes == .horizontal ||
+            self.progressBarAxes == .leading ||
+            self.progressBarAxes == .trailing {
+            return outsideCGSize.height
         } else {
+            if self.isShowProgressBar  {
+                return self.thresholdValue
+            }
             let value:CGFloat
             if self.axes == .horizontal {
                 if self.afterValue >= 0 {
-                    let v = getHorizontalDifferenceValue(outsideProxy)
+                    let v = getHorizontalDifferenceValue(outsideCGSize)
                     if  v < 0 {
                         value = self.enableAppend ? abs(v) : 0
                     }else{
@@ -246,7 +301,7 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                 }
             }else{
                 if self.afterValue >= 0 {
-                    let v = self.getVerticalDifferenceValue(outsideProxy)
+                    let v = self.getVerticalDifferenceValue(outsideCGSize)
                     if  v < 0 {
                         value = self.enableAppend ? abs(v) : 0
                     }else {
@@ -256,72 +311,21 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
                     value = self.enableRefresh ? abs(self.afterValue) : 0
                 }
             }
-            if self.isShowProgressBar || self.appendSecondThreshold || self.refreshSecondThreshold {
-                return value >= 0 ? value : 0
-            }
             return value
         }
     }
     
-    private func getProgressBarOffsetX(_ outsideProxy:GeometryProxy) -> CGFloat{
-        if self.isShowProgressBar { return 0 }
-        if self.progressBarAxes == .horizontal {
-            if self.axes == .horizontal {
-                if self.afterValue > 0 {
-                    let v = getHorizontalDifferenceValue(outsideProxy)
-                    if v > 0 {
-                        return -self.thresholdValue
-                    }
-                    return -self.thresholdValue + abs(v)
-                }
-                return  -self.thresholdValue + abs(self.afterValue)
-            }else{
-                if self.afterValue > 0 {
-                    let v = self.getVerticalDifferenceValue(outsideProxy)
-                    if v > 0 {
-                        return -self.thresholdValue
-                    }
-                    return -self.thresholdValue + abs(v)
-                }
-                return  -self.thresholdValue + abs(self.afterValue)
-            }
-        }else{
-            return 0
+    private func getVerticalDifferenceValue(_ outsideCGSize:CGSize) -> CGFloat{
+        if self.insideHeight < outsideCGSize.height {
+            return self.afterValue
         }
+        return self.insideHeight - outsideCGSize.height - self.afterValue
     }
     
-    private func getProgressBarOffsetY(_ outsideProxy:GeometryProxy) -> CGFloat{
-        if self.isShowProgressBar { return 0 }
-        if self.progressBarAxes == .horizontal {
-            return 0
-        } else {
-            if self.axes == .horizontal {
-                if self.afterValue >= 0 {
-                    let v = getHorizontalDifferenceValue(outsideProxy)
-                    if  v < 0 {
-                        return -self.thresholdValue + abs(v)
-                    }
-                    return -self.thresholdValue
-                }
-                return -self.thresholdValue + abs(self.afterValue)
-            }else{
-                if self.afterValue >= 0 {
-                    let v = self.getVerticalDifferenceValue(outsideProxy)
-                    if  v < 0 {
-                        return -self.thresholdValue + abs(v)
-                    }
-                    return -self.thresholdValue
-                }
-                return -self.thresholdValue + abs(self.afterValue)
-            }
+    private func getHorizontalDifferenceValue(_ outsideCGSize:CGSize) -> CGFloat{
+        if self.insideWidth < outsideCGSize.width {
+            return self.afterValue
         }
-    }
-    
-    private func getVerticalDifferenceValue(_ outsideProxy:GeometryProxy) -> CGFloat{
-        self.insideHeight - outsideProxy.size.height - self.afterValue
-    }
-    
-    private func getHorizontalDifferenceValue(_ outsideProxy:GeometryProxy) -> CGFloat{
-        self.insideWidth - outsideProxy.size.width - self.afterValue
+        return self.insideWidth - outsideCGSize.width - self.afterValue
     }
 }

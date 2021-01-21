@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		7460F60625B92E9700472FB6 /* ProgressBarAlignment.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7460F60525B92E9700472FB6 /* ProgressBarAlignment.swift */; };
 		7496DF95251C745900D1A0D1 /* NOSwipeRefreshLayout.h in Headers */ = {isa = PBXBuildFile; fileRef = 7496DF93251C745900D1A0D1 /* NOSwipeRefreshLayout.h */; settings = {ATTRIBUTES = (Public, ); }; };
 		7496DFA6251C748D00D1A0D1 /* ProgressBarView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7496DFA3251C748D00D1A0D1 /* ProgressBarView.swift */; };
 		7496DFA7251C748D00D1A0D1 /* NOSwipeRefreshLayout.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7496DFA4251C748D00D1A0D1 /* NOSwipeRefreshLayout.swift */; };
@@ -71,6 +72,7 @@
 /* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
+		7460F60525B92E9700472FB6 /* ProgressBarAlignment.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProgressBarAlignment.swift; sourceTree = "<group>"; };
 		7496DF90251C745900D1A0D1 /* NOSwipeRefreshLayout.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = NOSwipeRefreshLayout.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		7496DF93251C745900D1A0D1 /* NOSwipeRefreshLayout.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = NOSwipeRefreshLayout.h; sourceTree = "<group>"; };
 		7496DF94251C745900D1A0D1 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
@@ -151,6 +153,7 @@
 				7496DFA3251C748D00D1A0D1 /* ProgressBarView.swift */,
 				7496DFA5251C748D00D1A0D1 /* ScrollOffsetPreferenceKey.swift */,
 				74B8D0D2251C96F6007E138D /* SizePreferenceKey.swift */,
+				7460F60525B92E9700472FB6 /* ProgressBarAlignment.swift */,
 			);
 			path = NOSwipeRefreshLayout;
 			sourceTree = "<group>";
@@ -352,6 +355,7 @@
 				7496DFA6251C748D00D1A0D1 /* ProgressBarView.swift in Sources */,
 				74B8D0D3251C96F6007E138D /* SizePreferenceKey.swift in Sources */,
 				7496DFA8251C748D00D1A0D1 /* ScrollOffsetPreferenceKey.swift in Sources */,
+				7460F60625B92E9700472FB6 /* ProgressBarAlignment.swift in Sources */,
 				7496DFA7251C748D00D1A0D1 /* NOSwipeRefreshLayout.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -543,7 +547,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neetoffice.widget.NOSwipeRefreshLayout;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
@@ -573,7 +577,7 @@
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				MARKETING_VERSION = 1.0.4;
+				MARKETING_VERSION = 1.0.5;
 				PRODUCT_BUNDLE_IDENTIFIER = com.neetoffice.widget.NOSwipeRefreshLayout;
 				PRODUCT_NAME = "$(TARGET_NAME:c99extidentifier)";
 				SKIP_INSTALL = YES;
