@@ -83,7 +83,7 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
     
     private var progressBarLayout: some View {
         ZStack{
-            if self.progressBarAxes == .vertical, self.progressBarAxes == .top {
+            if self.progressBarAxes == .vertical || self.progressBarAxes == .top {
                 VStack{
                     self.progressBarView.frame(width:self.getProgressBarWidth(CGSize(width: self.outsideWidth,
                                                                                      height: self.outsideHeight)),
@@ -134,7 +134,6 @@ public struct NOSwipeRefreshLayout<Content:View>: View {
             self.outsideHeight = value[1] > 0 ? value[1] :  UIScreen.main.bounds.height
             self.outsideGlobalX = value[2]
             self.outsideGlobalY = value[3]
-            print("outsideHeight: \(outsideHeight)")
         })
     }
     

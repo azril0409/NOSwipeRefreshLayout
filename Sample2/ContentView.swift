@@ -23,9 +23,9 @@ struct ContentView: View {
     }
     
     private var layout: some View {
-        NOSwipeRefreshLayout(axes: .horizontal,
+        NOSwipeRefreshLayout(axes: .vertical,
                              progressBarView: AnyView(Color.yellow),
-                             progressBarAxes: .leading,
+                             progressBarAxes: .bottom,
                              isShowProgressBar: self.$isShowProgressBar,
                              onScroll:{ rect in
                                 self.text = "x:\(rect.origin.x), y:\(rect.origin.y), width:\(rect.size.width), height:\(rect.size.height)"
@@ -43,7 +43,7 @@ struct ContentView: View {
                                 }
                              }
         ){
-            HStack{
+            VStack{
                 ForEach(self.items) { item in
                     Text(item.id.uuidString)
                         .frame(maxWidth: .infinity)
